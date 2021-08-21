@@ -15,15 +15,15 @@ const moment = require("moment-timezone");
 
 blocked = [];
 
-require("./index.js");
-nocache("./index.js", (module) => console.log(`${module} is now updated!`));
+require("./murphy.js");
+nocache("./murphy.js", (module) => console.log(`${module} is now updated!`));
 
-const starts = async (client = new WAConnection()) => {
-  client.logger.level = "warn";
-  client.version = [2, 2123, 8];
-  client.browserDescription = ["hehe boy", "Chrome", "3.0"];
+const starts = async (murphy = new WAConnection()) => {
+  murphy.logger.level = "warn";
+  murphy.version = [2, 2123, 8];
+  murphy.browserDescription = ["Murphy", "Chrome", "3.0"];
   console.log(banner.string);
-  client.on("qr", () => {
+  murphy.on("qr", () => {
     console.log(
       color("[", "white"),
       color("!", "blue"),
@@ -32,76 +32,76 @@ const starts = async (client = new WAConnection()) => {
     );
   });
 
-  fs.existsSync("./session.json") && client.loadAuthInfo("./session.json");
-  client.on("connecting", () => {
+  fs.existsSync("./murphy.json") && murphy.loadAuthInfo("./murphy.json");
+  murphy.on("connecting", () => {
     start("2", "Connecting...");
   });
-  client.on("open", () => {
+  murphy.on("open", () => {
     success("2", "Connected");
   });
-  await client.connect({ timeoutMs: 30 * 1000 });
+  await murphy.connect({ timeoutMs: 30 * 1000 });
   fs.writeFileSync(
-    "./session.json",
-    JSON.stringify(client.base64EncodedAuthInfo(), null, "\t")
+    "./murphy.json",
+    JSON.stringify(murphy.base64EncodedAuthInfo(), null, "\t")
   );
 
-  client.on("group-update", async (anu) => {
-    metdata = await client.groupMetadata(anu.jid);
+  murphy.on("group-update", async (anu) => {
+    metdata = await murphy.groupMetadata(anu.jid);
     if (anu.announce == "false") {
       teks = `- [ Group Opened ] -\n\n_Group telah dibuka oleh admin_\n_Sekarang semua member bisa mengirim pesan_`;
-      client.sendMessage(metdata.id, teks, MessageType.text);
+      murphy.sendMessage(metdata.id, teks, MessageType.text);
       console.log(`- [ Group Opened ] - In ${metdata.subject}`);
     } else if (anu.announce == "true") {
       teks = `- [ Group Closed ] -\n\n_Group telah ditutup oleh admin_\n_Sekarang hanya admin yang dapat mengirim pesan_`;
-      client.sendMessage(metdata.id, teks, MessageType.text);
+      murphy.sendMessage(metdata.id, teks, MessageType.text);
       console.log(`- [ Group Closed ] - In ${metdata.subject}`);
     } else if (!anu.desc == "") {
       tag = anu.descOwner.split("@")[0] + "@s.whatsapp.net";
       teks = `- [ Group Description Change ] -\n\nDeskripsi Group telah diubah oleh Admin @${
         anu.descOwner.split("@")[0]
       }\n� Deskripsi Baru : ${anu.desc}`;
-      client.sendMessage(metdata.id, teks, MessageType.text, {
+      murphy.sendMessage(metdata.id, teks, MessageType.text, {
         contextInfo: { mentionedJid: [tag] },
       });
       console.log(`- [ Group Description Change ] - In ${metdata.subject}`);
     } else if (anu.restrict == "false") {
       teks = `- [ Group Setting Change ] -\n\nEdit Group info telah dibuka untuk member\nSekarang semua member dapat mengedit info Group Ini`;
-      client.sendMessage(metdata.id, teks, MessageType.text);
+      murphy.sendMessage(metdata.id, teks, MessageType.text);
       console.log(`- [ Group Setting Change ] - In ${metdata.subject}`);
     } else if (anu.restrict == "true") {
       teks = `- [ Group Setting Change ] -\n\nEdit Group info telah ditutup untuk member\nSekarang hanya admin group yang dapat mengedit info Group Ini`;
-      client.sendMessage(metdata.id, teks, MessageType.text);
+      murphy.sendMessage(metdata.id, teks, MessageType.text);
       console.log(`- [ Group Setting Change ] - In ${metdata.subject}`);
     }
   });
-  client.on("group-participants-update", async (anu) => {
+  murphy.on("group-participants-update", async (anu) => {
     try {
-      groupMet = await client.groupMetadata(anu.jid);
+      groupMet = await murphy.groupMetadata(anu.jid);
       groupMembers = groupMet.participants;
       groupAdmins = getGroupAdmins(groupMembers);
       mem = anu.participants[0];
 
       console.log(anu);
       try {
-        pp_user = await client.getProfilePicture(mem);
+        pp_user = await murphy.getProfilePicture(mem);
       } catch (e) {
         pp_user =
           "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png?q=60";
       }
       try {
-        pp_grup = await client.getProfilePicture(anu.jid);
+        pp_grup = await murphy.getProfilePicture(anu.jid);
       } catch (e) {
         pp_grup =
           "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png?q=60";
       }
-      if (anu.action == "add" && mem.includes(client.user.jid)) {
-        client.sendMessage(anu.jid, "Halo!", "conversation");
+      if (anu.action == "add" && mem.includes(murphy.user.jid)) {
+        murphy.sendMessage(anu.jid, "Halo!", "conversation");
       }
-      if (anu.action == "add" && !mem.includes(client.user.jid)) {
-        mdata = await client.groupMetadata(anu.jid);
+      if (anu.action == "add" && !mem.includes(murphy.user.jid)) {
+        mdata = await murphy.groupMetadata(anu.jid);
         memeg = mdata.participants.length;
         num = anu.participants[0];
-        let v = client.contacts[num] || { notify: num.replace(/@.+/, "") };
+        let v = murphy.contacts[num] || { notify: num.replace(/@.+/, "") };
         anu_user = v.vname || v.notify || num.split("@")[0];
         time_wel = moment.tz("Asia/Jakarta").format("HH:mm");
         teks = `Halo ${anu_user} \n\nNama : \nUmur :\nGender : \nAsal :\n\nSemoga Betah dan jangan lupa isi\nAnd Following Rules Group`;
@@ -116,7 +116,7 @@ const starts = async (client = new WAConnection()) => {
           { buttonId: `y`, buttonText: { displayText: "Welcome👋" }, type: 1 },
         ];
         imageMsg = (
-          await client.prepareMessageMedia(buff, "imageMessage", {
+          await murphy.prepareMessageMedia(buff, "imageMessage", {
             thumbnail: buff,
           })
         ).imageMessage;
@@ -127,17 +127,17 @@ const starts = async (client = new WAConnection()) => {
           buttons: buttons,
           headerType: 4,
         };
-        prep = await client.prepareMessageFromContent(
+        prep = await murphy.prepareMessageFromContent(
           mdata.id,
           { buttonsMessage },
           {}
         );
-        client.relayWAMessage(prep);
+        murphy.relayWAMessage(prep);
       }
-      if (anu.action == "remove" && !mem.includes(client.user.jid)) {
-        mdata = await client.groupMetadata(anu.jid);
+      if (anu.action == "remove" && !mem.includes(murphy.user.jid)) {
+        mdata = await murphy.groupMetadata(anu.jid);
         num = anu.participants[0];
-        let w = client.contacts[num] || { notify: num.replace(/@.+/, "") };
+        let w = murphy.contacts[num] || { notify: num.replace(/@.+/, "") };
         anu_user = w.vname || w.notify || num.split("@")[0];
         time_wel = moment.tz("Asia/Jakarta").format("HH:mm");
         memeg = mdata.participants.length;
@@ -153,7 +153,7 @@ const starts = async (client = new WAConnection()) => {
           { buttonId: `y`, buttonText: { displayText: "Sayonara👋" }, type: 1 },
         ];
         imageMsg = (
-          await client.prepareMessageMedia(buff, "imageMessage", {
+          await murphy.prepareMessageMedia(buff, "imageMessage", {
             thumbnail: buff,
           })
         ).imageMessage;
@@ -164,20 +164,20 @@ const starts = async (client = new WAConnection()) => {
           buttons: buttons,
           headerType: 4,
         };
-        prep = await client.prepareMessageFromContent(
+        prep = await murphy.prepareMessageFromContent(
           mdata.id,
           { buttonsMessage },
           {}
         );
-        client.relayWAMessage(prep);
+        murphy.relayWAMessage(prep);
       }
       if (anu.action == "promote") {
-        const mdata = await client.groupMetadata(anu.jid);
+        const mdata = await murphy.groupMetadata(anu.jid);
         num = anu.participants[0];
-        let w = client.contacts[num] || { notify: num.replace(/@.+/, "") };
+        let w = murphy.contacts[num] || { notify: num.replace(/@.+/, "") };
         anu_user = w.vname || w.notify || num.split("@")[0];
         try {
-          ppimg = await client.getProfilePicture(
+          ppimg = await murphy.getProfilePicture(
             `${anu.participants[0].split("@")[0]}@c.us`
           );
         } catch {
@@ -188,18 +188,18 @@ const starts = async (client = new WAConnection()) => {
           `https://api-yogipw.herokuapp.com/api/promote?name=${anu_user}&msg=selamat%20menjadi%20admin&mem=${groupAdmins.length}&picurl=${ppimg}&bgurl=https://cdn.discordapp.com/attachments/819995259261288475/835055559941292032/style.jpg`
         );
         teks = `${anu_user} Telah dipromote`;
-        client.sendMessage(mdata.id, buffer, MessageType.image, {
+        murphy.sendMessage(mdata.id, buffer, MessageType.image, {
           caption: teks,
         });
       }
 
       if (anu.action == "demote") {
-        const mdata = await client.groupMetadata(anu.jid);
+        const mdata = await murphy.groupMetadata(anu.jid);
         num = anu.participants[0];
-        let w = client.contacts[num] || { notify: num.replace(/@.+/, "") };
+        let w = murphy.contacts[num] || { notify: num.replace(/@.+/, "") };
         anu_user = w.vname || w.notify || num.split("@")[0];
         try {
-          ppimg = await client.getProfilePicture(
+          ppimg = await murphy.getProfilePicture(
             `${anu.participants[0].split("@")[0]}@c.us`
           );
         } catch {
@@ -211,7 +211,7 @@ const starts = async (client = new WAConnection()) => {
           `https://api-yogipw.herokuapp.com/api/demote?name=${anu_user}&msg=yahahaha didemote&mem=${groupAdmins.length}&picurl=${ppimg}&bgurl=https://cdn.discordapp.com/attachments/819995259261288475/835055559941292032/style.jpg`
         );
         teks = `${anu_user} Telah didemote`;
-        client.sendMessage(mdata.id, buffer, MessageType.image, {
+        murphy.sendMessage(mdata.id, buffer, MessageType.image, {
           caption: teks,
         });
       }
@@ -220,7 +220,7 @@ const starts = async (client = new WAConnection()) => {
     }
   });
   //
-  client.on("message-delete", async (m) => {
+  murphy.on("message-delete", async (m) => {
     if (m.key.remoteJid == "status@broadcast") return;
     if (!m.key.fromMe && m.key.fromMe) return;
     m.message =
@@ -241,7 +241,7 @@ const starts = async (client = new WAConnection()) => {
       year: "numeric",
     });
     const type = Object.keys(m.message)[0];
-    client.sendMessage(
+    murphy.sendMessage(
       m.key.remoteJid,
       `\`\`\`「 Anti Delete 」\`\`\`
   •> Nama : @${m.participant.split("@")[0]}
@@ -251,20 +251,20 @@ const starts = async (client = new WAConnection()) => {
       { quoted: m.message, contextInfo: { mentionedJid: [m.participant] } }
     );
 
-    client.copyNForward(m.key.remoteJid, m.message);
+    murphy.copyNForward(m.key.remoteJid, m.message);
   });
-  client.on("chat-update", async (message) => {
-    require("./index.js")(client, message);
+  murphy.on("chat-update", async (message) => {
+    require("./index.js")(murphy, message);
   });
   isBattre = "Not Detect"; //
   isCharge = "Not Detect"; //
-  client.on(`CB:action,,battery`, (json) => {
+  murphy.on(`CB:action,,battery`, (json) => {
     const batteryLevelStr = json[2][0][1].value;
     const batterylevel = parseInt(batteryLevelStr);
     isBattre = batterylevel + "%";
     isCharge = json[2][0][1].live;
   });
-  client.on("CB:Blocklist", (json) => {
+  murphy.on("CB:Blocklist", (json) => {
     if (blocked.length > 2) return;
     for (let i of json[1].blocklist) {
       blocked.push(i.replace("c.us", "s.whatsapp.net"));
